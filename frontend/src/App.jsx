@@ -10,7 +10,10 @@ import PostmanGuideModal from './components/PostmanGuideModal';
 import AboutModal from './components/AboutModal';
 import AdminLoginModal from './components/AdminLoginModal';
 import Footer from './components/Footer';
+import ChatbotWidget from './components/ChatbotWidget';
 import { Home, Building2, Utensils, Sparkles, RefreshCw, AlertCircle, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
+
+// const API_BASE = 'https://github.com/Abhishek-Royy/Mess_Nest/api';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -183,7 +186,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      
+
       {/* Toast Notification Banner */}
       {notification && (
         <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-4 z-50 bg-teal-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-teal-700 flex items-center gap-2 text-xs font-bold animate-slideDown max-w-sm ml-auto">
@@ -207,11 +210,11 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        
+
         {/* EXPLORE TAB (STUDENT HOME VIEW) */}
         {activeTab === 'explore' && (
           <div>
-            
+
             {/* Hero & Search Banner */}
             <HeroSearch
               filters={filters}
@@ -234,11 +237,10 @@ export default function App() {
                     <button
                       key={cat.value}
                       onClick={() => setFilters({ ...filters, category: cat.value })}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all ${
-                        isActive
+                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all ${isActive
                           ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20 scale-105'
                           : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-                      }`}
+                        }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
                       <span>{cat.label}</span>
@@ -382,6 +384,9 @@ export default function App() {
         onOpenPostmanGuide={() => setIsPostmanGuideOpen(true)}
         onOpenAbout={() => setIsAboutOpen(true)}
       />
+
+      {/* AI Chatbot — always visible, floating bottom-right */}
+      <ChatbotWidget />
 
     </div>
   );
