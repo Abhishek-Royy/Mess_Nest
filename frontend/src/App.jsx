@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Navbar from './components/Navbar';
 import HeroSearch from './components/HeroSearch';
@@ -9,11 +9,11 @@ import AdminPortal from './components/AdminPortal';
 import PostmanGuideModal from './components/PostmanGuideModal';
 import AboutModal from './components/AboutModal';
 import AdminLoginModal from './components/AdminLoginModal';
+import UserAuthModal from './components/UserAuthModal';
+import UserBookingsModal from './components/UserBookingsModal';
 import Footer from './components/Footer';
 import ChatbotWidget from './components/ChatbotWidget';
-import { Home, Building2, Utensils, Sparkles, RefreshCw, AlertCircle, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
-
-// const API_BASE = 'https://github.com/Abhishek-Royy/Mess_Nest/api';
+import { Home, Building2, Utensils, Sparkles, RefreshCw, AlertCircle, Phone, MessageSquare, CheckCircle2, XCircle, Bell } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -23,6 +23,28 @@ export default function App() {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // User Auth State
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('messnest_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [userBookings, setUserBookings] = useState([]);
+  const [userNotifications, setUserNotifications] = useState([]);
+  const previousBookingsRef = useRef([]);
+
+  // User Modals & Pending Actions
+  const [isUserAuthModalOpen, setIsUserAuthModalOpen] = useState(false);
+  const [userAuthInitialTab, setUserAuthInitialTab] = useState('login');
+  const [authPromptMessage, setAuthPromptMessage] = useState('');
+  const [pendingBookingProperty, setPendingBookingProperty] = useState(null);
+  const [isUserBookingsModalOpen, setIsUserBookingsModalOpen] = useState(false);
+  const [userBookingsInitialTab, setUserBookingsInitialTab] = useState('bookings');
 
   // Admin Auth State
   const [adminUser, setAdminUser] = useState(() => {
@@ -36,6 +58,82 @@ export default function App() {
   const isAdminLoggedIn = Boolean(adminUser);
   const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
 
+  // Filters State
+  const [filters, setFilters] = useState({
+    search: '',
+    category: 'All',
+    furnishedStatus: 'All',
+    maxPrice: ''
+  });
+
+  // Modal States
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [bookingModalProperty, setBookingModalProperty] = useState(null);
+  const [isPostmanGuideOpen, setIsPostmanGuideOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  // User Auth Handlers
+  const handleOpenUserAuth = (tab = 'login', prompt = '') => {
+    setUserAuthInitialTab(tab);
+    setAuthPromptMessage(prompt);
+    setIsUserAuthModalOpen(true);
+  };
+
+  // Intercept booking requests if user is not authenticated
+  const handleBookNow = (property) => {
+    if (!currentUser) {
+      setPendingBookingProperty(property);
+      setAuthPromptMessage(`Please sign in or register to book "${property.title}"`);
+      setUserAuthInitialTab('login');
+      setIsUserAuthModalOpen(true);
+      showToast('Student sign-in required to request a room booking.');
+      return;
+    }
+    setBookingModalProperty(property);
+  };
+
+  const handleUserAuthSuccess = (userData, token) => {
+    setCurrentUser(userData);
+    localStorage.setItem('messnest_user', JSON.stringify(userData));
+    localStorage.setItem('messnest_user_token', token);
+    
+    // If user was attempting to book a property before auth, auto-open the booking modal!
+    if (pendingBookingProperty) {
+      const propToBook = pendingBookingProperty;
+      setPendingBookingProperty(null);
+      setAuthPromptMessage('');
+      showToast(`Welcome ${userData.name}! Opening booking for ${propToBook.title}...`);
+      setTimeout(() => {
+        setBookingModalProperty(propToBook);
+      }, 400);
+    } else {
+      showToast(`Welcome back, ${userData.name}!`);
+    }
+
+    fetchUserBookingsAndNotifications(userData);
+  };
+
+  const handleUserLogout = () => {
+    setCurrentUser(null);
+    setUserBookings([]);
+    setUserNotifications([]);
+    setPendingBookingProperty(null);
+    setAuthPromptMessage('');
+    localStorage.removeItem('messnest_user');
+    localStorage.removeItem('messnest_user_token');
+    showToast('You have been logged out.');
+  };
+
+  const handleOpenUserBookings = (tab = 'bookings') => {
+    setUserBookingsInitialTab(tab);
+    setIsUserBookingsModalOpen(true);
+    if (currentUser) {
+      fetchUserBookingsAndNotifications(currentUser);
+    }
+  };
+
+  // Admin Auth Handlers
   const handleRequestAdminTab = () => {
     if (isAdminLoggedIn) {
       setActiveTab('admin');
@@ -60,21 +158,6 @@ export default function App() {
     showToast('Logged out of Admin Portal.');
   };
 
-  // Filters State
-  const [filters, setFilters] = useState({
-    search: '',
-    category: 'All',
-    furnishedStatus: 'All',
-    maxPrice: ''
-  });
-
-  // Modal States
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [bookingModalProperty, setBookingModalProperty] = useState(null);
-  const [isPostmanGuideOpen, setIsPostmanGuideOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [notification, setNotification] = useState(null);
-
   // Fetch properties from backend
   const fetchProperties = async () => {
     try {
@@ -98,7 +181,7 @@ export default function App() {
     }
   };
 
-  // Fetch student bookings from backend (for admin view & pending counter)
+  // Fetch all bookings (for admin view)
   const fetchBookings = async () => {
     try {
       const res = await axios.get(`${API_BASE}/bookings`);
@@ -110,10 +193,94 @@ export default function App() {
     }
   };
 
+  // Fetch user specific bookings & notifications
+  const fetchUserBookingsAndNotifications = async (user = currentUser) => {
+    if (!user) return;
+    try {
+      const userId = user.id || user._id;
+      const email = user.email;
+
+      // 1. Fetch user bookings
+      const bookingRes = await axios.get(`${API_BASE}/users/my-bookings`, {
+        params: { userId, email }
+      });
+      if (bookingRes.data && bookingRes.data.success) {
+        const newBookings = bookingRes.data.data || [];
+        
+        // Detect status transition from Pending to Confirmed / Rejected
+        if (previousBookingsRef.current.length > 0) {
+          newBookings.forEach((nb) => {
+            const oldB = previousBookingsRef.current.find((ob) => ob._id === nb._id);
+            if (oldB && oldB.status !== nb.status) {
+              if (nb.status === 'Confirmed') {
+                showToast(`🎉 Booking Accepted! Your request for "${nb.propertyTitle}" is CONFIRMED.`);
+              } else if (nb.status === 'Rejected') {
+                showToast(`❌ Booking Update: Request for "${nb.propertyTitle}" was declined.`);
+              }
+            }
+          });
+        }
+        previousBookingsRef.current = newBookings;
+        setUserBookings(newBookings);
+      }
+
+      // 2. Fetch user notifications
+      const notifRes = await axios.get(`${API_BASE}/users/notifications`, {
+        params: { userId, email }
+      });
+      if (notifRes.data && notifRes.data.success) {
+        setUserNotifications(notifRes.data.data || []);
+      }
+    } catch (err) {
+      console.warn('Could not fetch user data:', err.message);
+    }
+  };
+
+  // Mark single notification read
+  const handleMarkNotificationRead = async (id) => {
+    try {
+      await axios.patch(`${API_BASE}/users/notifications/${id}/read`);
+      setUserNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Mark all notifications read
+  const handleMarkAllNotificationsRead = async () => {
+    if (!currentUser) return;
+    try {
+      await axios.patch(`${API_BASE}/users/notifications/mark-all-read`, {
+        userId: currentUser.id || currentUser._id,
+        email: currentUser.email
+      });
+      setUserNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Initial loads & filter changes
   useEffect(() => {
     fetchProperties();
     fetchBookings();
   }, [filters]);
+
+  // Periodic Polling for user notifications & admin bookings (every 8 seconds)
+  useEffect(() => {
+    if (currentUser) {
+      fetchUserBookingsAndNotifications(currentUser);
+    }
+    const interval = setInterval(() => {
+      fetchBookings();
+      if (currentUser) {
+        fetchUserBookingsAndNotifications(currentUser);
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   const handleResetFilters = () => {
     setFilters({
@@ -124,12 +291,15 @@ export default function App() {
     });
   };
 
-  // Student Actions
+  // Student Booking Submit Action
   const handleStudentSubmitBooking = async (bookingData) => {
     const res = await axios.post(`${API_BASE}/bookings`, bookingData);
     if (res.data && res.data.success) {
       showToast('Booking request submitted successfully!');
       fetchBookings();
+      if (currentUser) {
+        fetchUserBookingsAndNotifications(currentUser);
+      }
     }
     return res.data;
   };
@@ -165,6 +335,9 @@ export default function App() {
     if (res.data && res.data.success) {
       showToast(`Booking request marked as ${status}!`);
       fetchBookings();
+      if (currentUser) {
+        fetchUserBookingsAndNotifications(currentUser);
+      }
     }
   };
 
@@ -174,28 +347,40 @@ export default function App() {
     if (res.data && res.data.success) {
       showToast('Booking deleted.');
       fetchBookings();
+      if (currentUser) {
+        fetchUserBookingsAndNotifications(currentUser);
+      }
     }
   };
 
   const showToast = (message) => {
     setNotification(message);
-    setTimeout(() => setNotification(null), 4000);
+    setTimeout(() => setNotification(null), 5000);
   };
 
   const pendingBookingsCount = bookings.filter((b) => b.status === 'Pending').length;
+  const unreadNotificationsCount = userNotifications.filter((n) => !n.isRead).length;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
 
-      {/* Toast Notification Banner */}
+      {/* Floating High-Visibility Toast Banner */}
       {notification && (
-        <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-4 z-50 bg-teal-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-teal-700 flex items-center gap-2 text-xs font-bold animate-slideDown max-w-sm ml-auto">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span className="truncate">{notification}</span>
+        <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-slate-900/95 backdrop-blur-md text-white px-4 py-3.5 rounded-2xl shadow-2xl border border-teal-500/40 flex items-center justify-between gap-3 text-xs font-bold animate-slideDown max-w-md ml-auto">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
+            <span className="leading-tight">{notification}</span>
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-slate-400 hover:text-white p-1 rounded-lg"
+          >
+            ×
+          </button>
         </div>
       )}
 
-      {/* Navbar Header */}
+      {/* Navbar Header with Dynamic Profile */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -203,9 +388,15 @@ export default function App() {
         isAdminLoggedIn={isAdminLoggedIn}
         adminUser={adminUser}
         onAdminLogout={handleAdminLogout}
-        onOpenPostmanGuide={() => setIsPostmanGuideOpen(true)}
         onOpenAbout={() => setIsAboutOpen(true)}
         pendingBookingsCount={pendingBookingsCount}
+        // User Auth props
+        currentUser={currentUser}
+        onOpenUserAuth={handleOpenUserAuth}
+        onUserLogout={handleUserLogout}
+        onOpenUserBookings={handleOpenUserBookings}
+        userBookingsCount={userBookings.length}
+        unreadNotificationsCount={unreadNotificationsCount}
       />
 
       {/* Main Container */}
@@ -300,7 +491,7 @@ export default function App() {
                     key={property._id}
                     property={property}
                     onSelectProperty={(p) => setSelectedProperty(p)}
-                    onBookNow={(p) => setBookingModalProperty(p)}
+                    onBookNow={(p) => handleBookNow(p)}
                   />
                 ))}
               </div>
@@ -324,8 +515,11 @@ export default function App() {
             onRefreshData={() => {
               fetchProperties();
               fetchBookings();
+              if (currentUser) {
+                fetchUserBookingsAndNotifications(currentUser);
+              }
             }}
-            onOpenPostmanGuide={() => setIsPostmanGuideOpen(true)}
+            onOpenPostmanGuide={() => setIsPostmanGuideOpen(false)}
           />
         )}
 
@@ -338,9 +532,14 @@ export default function App() {
           onClose={() => setSelectedProperty(null)}
           onOpenBookingModal={(p) => {
             setSelectedProperty(null);
-            setBookingModalProperty(p);
+            handleBookNow(p);
           }}
           onSubmitBooking={handleStudentSubmitBooking}
+          currentUser={currentUser}
+          onRequireAuth={(p) => {
+            setSelectedProperty(null);
+            handleBookNow(p);
+          }}
         />
       )}
 
@@ -350,8 +549,36 @@ export default function App() {
           property={bookingModalProperty}
           onClose={() => setBookingModalProperty(null)}
           onSubmitBooking={handleStudentSubmitBooking}
+          currentUser={currentUser}
+          onRequireAuth={(p) => handleBookNow(p)}
         />
       )}
+
+      {/* User Login & Register Modal */}
+      <UserAuthModal
+        isOpen={isUserAuthModalOpen}
+        onClose={() => {
+          setIsUserAuthModalOpen(false);
+          setAuthPromptMessage('');
+        }}
+        onAuthSuccess={handleUserAuthSuccess}
+        apiBase={API_BASE}
+        initialTab={userAuthInitialTab}
+        promptMessage={authPromptMessage}
+      />
+
+      {/* User Booking Status & Notifications Modal */}
+      <UserBookingsModal
+        isOpen={isUserBookingsModalOpen}
+        onClose={() => setIsUserBookingsModalOpen(false)}
+        currentUser={currentUser}
+        userBookings={userBookings}
+        userNotifications={userNotifications}
+        onRefreshData={() => fetchUserBookingsAndNotifications(currentUser)}
+        onMarkNotificationRead={handleMarkNotificationRead}
+        onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+        initialTab={userBookingsInitialTab}
+      />
 
       {/* Postman Guide Modal */}
       {isPostmanGuideOpen && (

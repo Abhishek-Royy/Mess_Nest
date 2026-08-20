@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { X, Calendar, CheckCircle2, Send, Building } from 'lucide-react';
 
-export default function BookingModal({ property, onClose, onSubmitBooking }) {
+export default function BookingModal({ property, onClose, onSubmitBooking, currentUser, onRequireAuth }) {
   const [formData, setFormData] = useState({
-    studentName: '',
-    studentPhone: '',
-    studentEmail: '',
+    studentName: currentUser?.name || '',
+    studentPhone: currentUser?.phone || '',
+    studentEmail: currentUser?.email || '',
     moveInDate: '',
     durationMonths: 6,
     notes: ''
@@ -13,20 +13,45 @@ export default function BookingModal({ property, onClose, onSubmitBooking }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Sync state if currentUser changes
+  React.useEffect(() => {
+    if (currentUser) {
+      setFormData((prev) => ({
+        ...prev,
+        studentName: currentUser.name || prev.studentName,
+        studentPhone: currentUser.phone || prev.studentPhone,
+        studentEmail: currentUser.email || prev.studentEmail
+      }));
+    }
+  }, [currentUser]);
+
   if (!property) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!currentUser) {
+      onClose();
+      if (onRequireAuth) onRequireAuth(property);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmitBooking({
         propertyId: property._id,
         propertyTitle: property.title,
+        userId: currentUser?.id || currentUser?._id || null,
         ...formData
       });
       setSuccess(true);
     } catch (err) {
-      alert('Failed to send booking request. Please check API server.');
+      if (err.response?.data?.requireAuth) {
+        onClose();
+        if (onRequireAuth) onRequireAuth(property);
+      } else {
+        alert(err.response?.data?.message || 'Failed to send booking request. Please check API server.');
+      }
     } finally {
       setIsSubmitting(false);
     }

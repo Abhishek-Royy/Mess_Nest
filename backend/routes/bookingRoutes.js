@@ -2,11 +2,30 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const Property = require('../models/Property');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // POST new booking (Student action) directly in MongoDB
 router.post('/', async (req, res) => {
   try {
-    const { propertyId, propertyTitle, studentName, studentPhone, studentEmail, moveInDate, durationMonths, notes } = req.body;
+    const { propertyId, propertyTitle, studentName, studentPhone, studentEmail, moveInDate, durationMonths, notes, userId } = req.body;
+
+    // Strict Authentication check: User must be registered/logged in to book
+    let authenticatedUser = null;
+    if (userId) {
+      authenticatedUser = await User.findById(userId);
+    }
+    if (!authenticatedUser && studentEmail) {
+      authenticatedUser = await User.findOne({ email: studentEmail.trim().toLowerCase() });
+    }
+
+    if (!authenticatedUser) {
+      return res.status(401).json({
+        success: false,
+        requireAuth: true,
+        message: 'Authentication required. Please sign in or register to book this property.'
+      });
+    }
 
     if (!propertyId || !studentName || !studentPhone || !studentEmail || !moveInDate) {
       return res.status(400).json({
@@ -26,14 +45,30 @@ router.post('/', async (req, res) => {
     const booking = await Booking.create({
       propertyId,
       propertyTitle: resolvedTitle,
+      userId: userId || null,
       studentName,
       studentPhone,
-      studentEmail,
+      studentEmail: studentEmail.trim().toLowerCase(),
       moveInDate,
       durationMonths: durationMonths ? Number(durationMonths) : 6,
       notes: notes || '',
       status: 'Pending'
     });
+
+    // Create automatic initial notification for user
+    try {
+      await Notification.create({
+        userId: userId || null,
+        userEmail: studentEmail.trim().toLowerCase(),
+        bookingId: booking._id,
+        propertyTitle: resolvedTitle,
+        title: '📋 Booking Request Submitted',
+        message: `Your booking request for "${resolvedTitle}" (ID: #${booking._id.toString().slice(-6)}) was sent to the property admin. We will notify you once approved.`,
+        status: 'Pending'
+      });
+    } catch (notifErr) {
+      console.warn('Could not create initial notification:', notifErr.message);
+    }
 
     return res.status(201).json({
       success: true,
@@ -76,6 +111,36 @@ router.patch('/:id/status', async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+
+    // Generate real-time notification for the user
+    try {
+      let notifTitle = '';
+      let notifMessage = '';
+
+      if (status === 'Confirmed') {
+        notifTitle = '🎉 Booking Accepted & Confirmed!';
+        notifMessage = `Great news! Your booking request for "${booking.propertyTitle}" (Ref ID: #${booking._id.toString().slice(-6)}) has been APPROVED by the property manager. Move-in date: ${booking.moveInDate}.`;
+      } else if (status === 'Rejected') {
+        notifTitle = '❌ Booking Request Declined';
+        notifMessage = `Your booking request for "${booking.propertyTitle}" (Ref ID: #${booking._id.toString().slice(-6)}) was not accepted by the manager due to room availability.`;
+      } else {
+        notifTitle = '⏳ Booking Status Updated';
+        notifMessage = `Your booking request for "${booking.propertyTitle}" (Ref ID: #${booking._id.toString().slice(-6)}) status was changed to ${status}.`;
+      }
+
+      await Notification.create({
+        userId: booking.userId || null,
+        userEmail: (booking.studentEmail || '').toLowerCase(),
+        bookingId: booking._id,
+        propertyTitle: booking.propertyTitle,
+        title: notifTitle,
+        message: notifMessage,
+        status: status
+      });
+    } catch (notifErr) {
+      console.warn('Could not create status update notification:', notifErr.message);
+    }
+
     return res.json({ success: true, message: `Booking status updated to ${status}`, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

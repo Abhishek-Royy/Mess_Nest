@@ -94,7 +94,23 @@ export default function PostmanGuideModal({ onClose, propertyIdSample }) {
               </div>
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
                 <span className="text-amber-400 font-bold">PATCH /api/bookings/:id/status</span>
-                <span className="text-slate-400">Admin update booking status (Confirmed / Rejected)</span>
+                <span className="text-slate-400">Admin accept/reject booking status</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                <span className="text-teal-400 font-bold">POST /api/users/register</span>
+                <span className="text-slate-400">Register student account (name, email, phone, password)</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                <span className="text-teal-400 font-bold">POST /api/users/login</span>
+                <span className="text-slate-400">Student login authentication</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                <span className="text-emerald-400 font-bold">GET /api/users/my-bookings</span>
+                <span className="text-slate-400">Fetch user booking list & status (?userId=... or ?email=...)</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                <span className="text-emerald-400 font-bold">GET /api/users/notifications</span>
+                <span className="text-slate-400">Fetch real-time alerts on admin acceptance/rejection</span>
               </div>
             </div>
           </div>

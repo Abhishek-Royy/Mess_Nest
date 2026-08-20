@@ -11,6 +11,11 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
     studentName: {
       type: String,
       required: [true, 'Student name is required'],

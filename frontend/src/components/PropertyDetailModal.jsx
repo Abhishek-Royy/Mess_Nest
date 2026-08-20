@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import { X, MapPin, Star, MessageSquare, Calendar, ShieldCheck, CheckCircle2, User, Phone, Home, Sparkles, Send } from 'lucide-react';
 
-export default function PropertyDetailModal({ property, onClose, onOpenBookingModal, onSubmitBooking }) {
+export default function PropertyDetailModal({ property, onClose, onOpenBookingModal, onSubmitBooking, currentUser, onRequireAuth }) {
   const [selectedImgIndex, setSelectedImgIndex] = useState(0);
 
   // Form state inside modal for fast booking
   const [bookingData, setBookingData] = useState({
-    studentName: '',
-    studentPhone: '',
-    studentEmail: '',
+    studentName: currentUser?.name || '',
+    studentPhone: currentUser?.phone || '',
+    studentEmail: currentUser?.email || '',
     moveInDate: '',
     durationMonths: 6,
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  // Sync with currentUser when user logs in
+  React.useEffect(() => {
+    if (currentUser) {
+      setBookingData((prev) => ({
+        ...prev,
+        studentName: currentUser.name || prev.studentName,
+        studentPhone: currentUser.phone || prev.studentPhone,
+        studentEmail: currentUser.email || prev.studentEmail
+      }));
+    }
+  }, [currentUser]);
 
   if (!property) return null;
 
@@ -28,16 +40,29 @@ export default function PropertyDetailModal({ property, onClose, onOpenBookingMo
 
   const handleInlineBookingSubmit = async (e) => {
     e.preventDefault();
+
+    if (!currentUser) {
+      if (onRequireAuth) {
+        onRequireAuth(property);
+      }
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmitBooking({
         propertyId: property._id,
         propertyTitle: property.title,
+        userId: currentUser?.id || currentUser?._id || null,
         ...bookingData
       });
       setBookingSuccess(true);
     } catch (err) {
-      alert('Failed to submit booking request. Please try again.');
+      if (err.response?.data?.requireAuth) {
+        if (onRequireAuth) onRequireAuth(property);
+      } else {
+        alert(err.response?.data?.message || 'Failed to submit booking request. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -238,6 +263,26 @@ export default function PropertyDetailModal({ property, onClose, onOpenBookingMo
                     className="text-xs text-teal-700 font-bold underline pt-1"
                   >
                     Submit another booking
+                  </button>
+                </div>
+              ) : !currentUser ? (
+                <div className="bg-amber-50 border border-amber-200/90 p-5 rounded-2xl text-center space-y-3 my-2">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-amber-950">Student Sign In Required to Book</h4>
+                    <p className="text-xs text-amber-800/90 mt-1 max-w-md mx-auto leading-relaxed">
+                      You need a student account to request bookings, track confirmation status, and receive real-time updates when the property admin approves your room.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onRequireAuth && onRequireAuth(property)}
+                    className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md shadow-teal-600/20 transition-all inline-flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Sign In / Register to Book</span>
                   </button>
                 </div>
               ) : (
