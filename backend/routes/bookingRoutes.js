@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Property = require('../models/Property');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const { sendWhatsAppNotification, generateWhatsAppUrl, buildWhatsAppMessage } = require('../utils/whatsappService');
 
 // POST new booking (Student action) directly in MongoDB
 router.post('/', async (req, res) => {
@@ -112,7 +113,7 @@ router.patch('/:id/status', async (req, res) => {
     );
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
 
-    // Generate real-time notification for the user
+    // Generate real-time in-app notification for the user
     try {
       let notifTitle = '';
       let notifMessage = '';
@@ -141,7 +142,31 @@ router.patch('/:id/status', async (req, res) => {
       console.warn('Could not create status update notification:', notifErr.message);
     }
 
-    return res.json({ success: true, message: `Booking status updated to ${status}`, data: booking });
+    // Generate WhatsApp notification data for admin 1-click dispatch
+    let whatsappData = null;
+    try {
+      if (booking.studentPhone && (status === 'Confirmed' || status === 'Rejected')) {
+        const result = await sendWhatsAppNotification({
+          phone: booking.studentPhone,
+          status,
+          studentName: booking.studentName,
+          propertyTitle: booking.propertyTitle,
+          bookingId: booking._id,
+          moveInDate: booking.moveInDate,
+          durationMonths: booking.durationMonths
+        });
+        whatsappData = result;
+      }
+    } catch (waErr) {
+      console.warn('Could not build WhatsApp notification:', waErr.message);
+    }
+
+    return res.json({
+      success: true,
+      message: `Booking status updated to ${status}`,
+      data: booking,
+      whatsappData: whatsappData
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
