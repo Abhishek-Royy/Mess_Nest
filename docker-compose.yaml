@@ -1,0 +1,67 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MessNest – Docker Compose
+#
+# Services
+#   frontend  – React/Vite app served via nginx  (port 80)
+#   backend   – Node.js/Express REST API          (port 5000)
+#   chatbot   – Python Flask ML chatbot           (port 5001)
+#
+# Usage:
+#   docker compose up --build          # first run
+#   docker compose up -d               # detached mode
+#   docker compose down                # stop & remove containers
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Frontend ─────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: messnest-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - chatbot
+    restart: unless-stopped
+    networks:
+      - messnest-net
+
+  # ── Backend (Node.js / Express) ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: messnest-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      # Override with your real values in a .env file or CI secrets
+      - PORT=${PORT:-5000}
+      - MONGO_URI=${MONGO_URI}
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - messnest-net
+
+  # ── Chatbot (Python / Flask) ──────────────────────────────────────────────
+  chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    container_name: messnest-chatbot
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    networks:
+      - messnest-net
+
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  messnest-net:
+    driver: bridge

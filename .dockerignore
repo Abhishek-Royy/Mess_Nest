@@ -1,0 +1,68 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Root .dockerignore – applies to each service build context
+# (per-service .dockerignore files in backend/ and frontend/ take precedence
+#  when Docker BuildKit is used)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Docker files (no need to embed them inside images)
+**/Dockerfile
+**/.dockerignore
+docker-compose*.yaml
+
+# Node artefacts
+**/node_modules
+**/.npm
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Frontend build output (rebuilt inside container)
+frontend/dist
+frontend/.vite
+
+# Environment / secrets – load via env_file or runtime injection
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python artefacts
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/pip-log.txt
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# Chatbot training data & scripts (not needed at runtime)
+chatbot/train.py
+chatbot/data/
+
+# Editor / OS junk
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Test directories
+**/tests
+**/__tests__
+**/*.test.*
+**/*.spec.*
+
+# README / docs
+README.md
+*.md
