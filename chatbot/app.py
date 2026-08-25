@@ -1,13 +1,4 @@
-"""
-app.py - MessNest AI Chatbot Flask Server
-------------------------------------------
-Loads model.pkl + vectorizer.pkl and exposes:
-    POST /api/chat   { "message": "..." }  →  { "reply": "..." }
 
-Run:
-    python app.py
-Server starts on http://localhost:5001
-"""
 
 import os
 import joblib
