@@ -48,27 +48,44 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-async function startServer() {
+// Cache the connection across serverless invocations
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
   if (!MONGO_URI) {
-    console.error('ERROR: MONGO_URI is not defined in .env file!');
-    process.exit(1);
+    throw new Error('MONGO_URI is not defined in environment variables!');
   }
-
-  try {
-    const maskedUri = MONGO_URI.replace(/:([^@]+)@/, ':****@');
-    console.log(`Connecting to MongoDB Atlas: ${maskedUri}`);
-    
-    await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 8000
-    });
-    console.log('✅ Connected to MongoDB Atlas successfully!');
-  } catch (err) {
-    console.error('❌ Failed to connect to MongoDB Atlas:', err.message);
-  }
-
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  const maskedUri = MONGO_URI.replace(/:([^@]+)@/, ':****@');
+  console.log(`Connecting to MongoDB Atlas: ${maskedUri}`);
+  await mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 8000
   });
+  isConnected = true;
+  console.log('✅ Connected to MongoDB Atlas successfully!');
 }
 
-startServer();
+// Local development: start a normal HTTP server
+if (process.env.NODE_ENV !== 'production') {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('❌ Failed to connect to MongoDB Atlas:', err.message);
+      process.exit(1);
+    });
+}
+
+// Vercel serverless export — connects to DB then hands off to Express
+module.exports = async (req, res) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('❌ DB connection error:', err.message);
+    return res.status(500).json({ error: 'Database connection failed' });
+  }
+  return app(req, res);
+};
