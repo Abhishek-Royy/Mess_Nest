@@ -15,7 +15,7 @@ import Footer from './components/Footer';
 import ChatbotWidget from './components/ChatbotWidget';
 import { Home, Building2, Utensils, Sparkles, RefreshCw, AlertCircle, Phone, MessageSquare, CheckCircle2, XCircle, Bell } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('explore'); // 'explore' or 'admin'
@@ -176,7 +176,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error fetching properties:', err);
-      setError('Could not connect to backend server. Make sure node server is running on http://localhost:5000');
+      setError('Could not connect to the backend server. Please try again later.');
     } finally {
       setIsLoading(false);
     }

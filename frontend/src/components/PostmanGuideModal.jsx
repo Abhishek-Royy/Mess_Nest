@@ -69,7 +69,7 @@ export default function PostmanGuideModal({ onClose, propertyIdSample }) {
           <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
             <h3 className="text-sm font-bold text-teal-400 mb-2 flex items-center gap-1.5">
               <Code className="w-4 h-4" />
-              <span>Available API Routes (Base URL: http://localhost:5000)</span>
+              <span>Available API Routes (Base URL: https://mess-nest.vercel.app)</span>
             </h3>
             <div className="space-y-2 font-mono text-[11px]">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">

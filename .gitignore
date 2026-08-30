@@ -72,6 +72,7 @@ chatbot/vectorizer.pkl
 # ── Vite / Frontend ───────────────────────────────────────────────────────────
 frontend/.vite/
 frontend/dist/
+frontend/.env.local
 
 # ── OS-generated files ────────────────────────────────────────────────────────
 Desktop.ini

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const CHATBOT_API = 'http://localhost:5001/api/chat';
+const CHATBOT_API = import.meta.env.VITE_CHATBOT_URL ? `${import.meta.env.VITE_CHATBOT_URL}/api/chat` : 'http://localhost:5001/api/chat';
 
 // ── Icons (inline SVG to avoid extra deps) ───────────────────────────────────
 const ChatIcon = () => (
