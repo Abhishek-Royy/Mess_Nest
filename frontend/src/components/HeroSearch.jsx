@@ -5,11 +5,12 @@ export default function HeroSearch({ filters, setFilters, onResetFilters }) {
   const quickLocations = ['Bangalore', 'Delhi', 'Kota', 'Pune'];
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-teal-900 via-slate-900 to-slate-900 text-white pt-8 sm:pt-10 pb-10 sm:pb-16 px-3.5 sm:px-6 lg:px-8 rounded-2xl sm:rounded-3xl shadow-xl border border-teal-800/50 mb-6 sm:mb-10">
+    <div className="relative overflow-hidden bg-gradient-to-br from-[#0f4c5c] via-[#12344d] to-[#101828] text-white pt-9 sm:pt-14 pb-9 sm:pb-14 px-3.5 sm:px-6 lg:px-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_20px_55px_rgba(15,76,92,0.2)] border border-teal-800/40 mb-7 sm:mb-10">
       
       {/* Background Decorative Gradient Orbs */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-24 right-[10%] w-96 h-96 bg-teal-400/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-36 left-[8%] w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-20 pointer-events-none [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:34px_34px]"></div>
 
       <div className="relative max-w-4xl mx-auto text-center">
         
@@ -20,15 +21,15 @@ export default function HeroSearch({ filters, setFilters, onResetFilters }) {
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-2 sm:mb-3 leading-tight">
+        <h1 className="text-2xl sm:text-4xl lg:text-[3.35rem] font-extrabold tracking-[-0.04em] text-white mb-3 sm:mb-4 leading-[1.08]">
           Find Your Perfect <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">PG, Flat or Mess</span> Near Campus
         </h1>
-        <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto mb-7 sm:mb-9 leading-relaxed">
           Search verified student accommodations, compare rent, chat directly on WhatsApp with owners, and book online in seconds.
         </p>
 
         {/* Filter Bar Card */}
-        <div className="bg-white text-slate-800 p-3.5 sm:p-5 rounded-2xl shadow-2xl border border-slate-100 max-w-3xl mx-auto">
+        <div className="bg-white/95 text-slate-800 p-3.5 sm:p-5 rounded-2xl shadow-2xl border border-white/70 max-w-4xl mx-auto backdrop-blur-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
             
             {/* Search Location / Area */}

@@ -3,64 +3,120 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --ink: #102a43;
+    --canvas: #f4f8fb;
+    --line: #d9e2ec;
+  }
+
+  * {
+    border-color: var(--line);
+  }
+
   html {
     scroll-behavior: smooth;
   }
+
   body {
-    background-color: #f8fafc;
-    color: #0f172a;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background:
+      radial-gradient(circle at 8% -10%, rgba(20, 184, 166, 0.1), transparent 28rem),
+      radial-gradient(circle at 92% 12%, rgba(99, 102, 241, 0.07), transparent 26rem),
+      var(--canvas);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, sans-serif;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: #99f6e4;
+    color: #134e4a;
   }
 }
 
-/* Glassmorphism Effect */
+@layer components {
+  .surface-card {
+    @apply bg-white border border-slate-200/80 shadow-sm;
+  }
+
+  .interactive-lift {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive-lift:hover {
+    @apply -translate-y-0.5 shadow-lg;
+  }
+
+  .field-control {
+    @apply bg-slate-50/80 border border-slate-200 rounded-xl transition-all;
+  }
+
+  .field-control:focus {
+    @apply bg-white border-teal-500 ring-4 ring-teal-500/10 outline-none;
+  }
+}
+
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(217, 226, 236, 0.9);
+  box-shadow: 0 12px 34px rgba(16, 42, 67, 0.06);
 }
 
 .glass-nav {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-bottom: 1px solid rgba(217, 226, 236, 0.85);
+  box-shadow: 0 4px 20px rgba(16, 42, 67, 0.04);
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #eef3f7;
 }
 
-/* Hide scrollbar utility */
+::-webkit-scrollbar-thumb {
+  background: #bcccdc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #829ab1;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* Badge Glows */
 .badge-pg {
   @apply bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-semibold px-2.5 py-0.5 rounded-full text-xs;
 }
+
 .badge-flat {
   @apply bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-semibold px-2.5 py-0.5 rounded-full text-xs;
 }
+
 .badge-mess {
   @apply bg-amber-50 text-amber-700 border border-amber-200/80 font-semibold px-2.5 py-0.5 rounded-full text-xs;
 }
@@ -69,7 +125,6 @@
   @apply bg-slate-100 text-slate-700 border border-slate-200 font-medium px-2 py-0.5 rounded-md text-xs;
 }
 
-/* Animations */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -85,3 +140,27 @@
   animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

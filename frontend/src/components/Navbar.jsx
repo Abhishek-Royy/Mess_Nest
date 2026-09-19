@@ -58,14 +58,14 @@ export default function Navbar({
 
   return (
     <header className="sticky top-0 z-40 glass-nav shadow-sm transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[4.5rem] flex items-center justify-between">
         
         {/* Brand Logo */}
         <div 
           onClick={() => handleTabClick('explore')}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[0.9rem] bg-gradient-to-tr from-teal-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-teal-500/20 group-hover:scale-105 transition-transform">
             <Home className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -79,7 +79,7 @@ export default function Navbar({
         </div>
 
         {/* Center / Navigation Tabs (Desktop View) */}
-        <div className="hidden md:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/60 gap-0.5">
+        <div className="hidden md:flex items-center bg-slate-100/70 p-1 rounded-2xl border border-slate-200/70 gap-0.5">
           <button
             onClick={() => handleTabClick('explore')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${

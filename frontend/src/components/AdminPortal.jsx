@@ -105,7 +105,7 @@ export default function AdminPortal({
     <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn">
       
       {/* Top Header */}
-      <div className="bg-slate-900 text-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-800">
+      <div className="bg-gradient-to-br from-[#172b4d] via-[#172b4d] to-[#253b67] text-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-[0_18px_45px_rgba(23,43,77,0.2)] flex flex-col md:flex-row md:items-center justify-between gap-4 border border-indigo-400/20">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-2">
             <UserCheck className="w-3.5 h-3.5" />
@@ -196,7 +196,7 @@ export default function AdminPortal({
 
       {/* TAB 1: Student Bookings */}
       {adminTab === 'bookings' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-[0_8px_28px_rgba(16,42,67,0.06)]">
           <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center justify-between">
             <span>Incoming Student Booking Requests</span>
             <span className="text-xs text-slate-500 font-normal">
