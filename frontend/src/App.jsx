@@ -372,7 +372,7 @@ export default function App() {
   const unreadNotificationsCount = userNotifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen flex flex-col text-slate-900 font-sans">
 
       {/* Floating High-Visibility Toast Banner */}
       {notification && (
@@ -459,7 +459,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
 
         {/* EXPLORE TAB (STUDENT HOME VIEW) */}
         {activeTab === 'explore' && (
@@ -499,7 +499,7 @@ export default function App() {
                 })}
               </div>
 
-              <div className="text-xs text-slate-500 font-semibold self-end sm:self-center">
+              <div className="text-xs text-slate-500 font-semibold self-end sm:self-center bg-white/70 border border-slate-200/80 rounded-full px-3 py-1.5">
                 Showing <span className="text-slate-900 font-bold">{properties.length}</span> verified results
               </div>
             </div>
@@ -544,7 +544,7 @@ export default function App() {
               </div>
             ) : (
               /* Property Cards Grid */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                 {properties.map((property) => (
                   <PropertyCard
                     key={property._id}
@@ -578,7 +578,7 @@ export default function App() {
                 fetchUserBookingsAndNotifications(currentUser);
               }
             }}
-            onOpenPostmanGuide={() => setIsPostmanGuideOpen(false)}
+            onOpenPostmanGuide={() => setIsPostmanGuideOpen(true)}
           />
         )}
 

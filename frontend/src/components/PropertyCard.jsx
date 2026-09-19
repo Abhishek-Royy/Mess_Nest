@@ -29,7 +29,7 @@ export default function PropertyCard({ property, onSelectProperty, onBookNow }) 
     : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80';
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
+    <div className="group bg-white rounded-[1.35rem] overflow-hidden border border-slate-200/80 shadow-[0_5px_18px_rgba(16,42,67,0.05)] hover:shadow-[0_18px_35px_rgba(16,42,67,0.12)] transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
       
       {/* Property Image Container */}
       <div 
@@ -73,7 +73,7 @@ export default function PropertyCard({ property, onSelectProperty, onBookNow }) 
       </div>
 
       {/* Property Details Body */}
-      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         
         <div>
           {/* Location / Area */}
@@ -83,9 +83,9 @@ export default function PropertyCard({ property, onSelectProperty, onBookNow }) 
           </div>
 
           {/* Property Name / Title */}
-          <h3 
+          <h3
             onClick={() => onSelectProperty(property)}
-            className="text-base sm:text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-teal-700 transition-colors cursor-pointer mb-2"
+            className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 line-clamp-1 group-hover:text-teal-700 transition-colors cursor-pointer mb-2"
           >
             {property.title}
           </h3>
