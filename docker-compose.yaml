@@ -65,3 +65,4 @@ services:
 networks:
   messnest-net:
     driver: bridge
+# Good shit ready yaml file for production 
